@@ -1,0 +1,52 @@
+---
+- name: Installer Docker
+  apt:
+    name:
+      - docker.io
+      - docker-compose
+    state: present
+
+- name: Démarrer et activer Docker
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Créer les dossiers ThingsBoard
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /opt/thingsboard/data
+    - /opt/thingsboard/logs
+
+- name: Créer le docker-compose ThingsBoard
+  copy:
+    dest: /opt/thingsboard/docker-compose.yml
+    content: |
+      version: '3.8'
+      services:
+        thingsboard:
+          image: thingsboard/tb-postgres
+          restart: always
+          ports:
+            - "8080:9090"
+            - "7070:7070"
+            - "9090:1883"
+          environment:
+            TB_QUEUE_TYPE: in-memory
+          volumes:
+            - /opt/thingsboard/data:/data
+            - /opt/thingsboard/logs:/var/log/thingsboard
+
+- name: Lancer ThingsBoard
+  shell: docker-compose up -d
+  args:
+    chdir: /opt/thingsboard
+
+- name: Attendre que ThingsBoard soit prêt
+  wait_for:
+    port: 8080
+    timeout: 300
+    delay: 30

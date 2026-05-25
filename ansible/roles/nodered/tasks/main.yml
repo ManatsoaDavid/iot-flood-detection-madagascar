@@ -1,0 +1,43 @@
+---
+- name: Installer Node.js 18.x
+  shell: |
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+    apt-get install -y nodejs
+  args:
+    creates: /usr/bin/node
+
+- name: Installer Node-RED globalement
+  npm:
+    name: node-red
+    global: yes
+    unsafe_perm: yes
+
+- name: Créer le service systemd Node-RED
+  copy:
+    dest: /etc/systemd/system/nodered.service
+    content: |
+      [Unit]
+      Description=Node-RED IoT Madagascar
+      After=network.target
+
+      [Service]
+      Type=simple
+      User=root
+      ExecStart=/usr/bin/node-red --max-old-space-size=256
+      Restart=on-failure
+      RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+
+- name: Activer et démarrer Node-RED
+  systemd:
+    name: nodered
+    state: started
+    enabled: yes
+    daemon_reload: yes
+
+- name: Attendre que Node-RED soit prêt
+  wait_for:
+    port: 1880
+    timeout: 60

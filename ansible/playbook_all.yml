@@ -1,0 +1,10 @@
+---
+- name: Déploiement complet IoT Madagascar
+  hosts: iot_servers
+  become: true
+
+  roles:
+    - common
+    - mosquitto
+    - nodered
+    - thingsboard

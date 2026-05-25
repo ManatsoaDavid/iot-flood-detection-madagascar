@@ -1,0 +1,41 @@
+---
+- name: Installer Mosquitto
+  apt:
+    name:
+      - mosquitto
+      - mosquitto-clients
+    state: present
+    update_cache: yes
+
+- name: Créer le fichier de configuration Mosquitto
+  copy:
+    dest: /etc/mosquitto/conf.d/iot_mada.conf
+    content: |
+      listener 1883
+      allow_anonymous false
+      password_file /etc/mosquitto/passwd
+      log_type all
+      log_dest file /var/log/mosquitto/mosquitto.log
+      persistence true
+      persistence_location /var/lib/mosquitto/
+
+- name: Créer l'utilisateur MQTT iot_user
+  shell: |
+    mosquitto_passwd -b -c /etc/mosquitto/passwd iot_user MadaIoT2025!
+  args:
+    creates: /etc/mosquitto/passwd
+
+- name: Créer l'utilisateur MQTT nodered_user
+  shell: |
+    mosquitto_passwd -b /etc/mosquitto/passwd nodered_user NodeRed2025!
+
+- name: Démarrer et activer Mosquitto
+  systemd:
+    name: mosquitto
+    state: restarted
+    enabled: yes
+
+- name: Vérifier que Mosquitto écoute sur port 1883
+  wait_for:
+    port: 1883
+    timeout: 30
