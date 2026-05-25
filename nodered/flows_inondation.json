@@ -1,0 +1,96 @@
+[
+  {
+    "id": "mqtt_in_mada",
+    "type": "mqtt in",
+    "name": "Réception capteurs Madagascar",
+    "topic": "mada/inondation/#",
+    "qos": "1",
+    "broker": "broker_mada",
+    "x": 120,
+    "y": 100,
+    "wires": [["parse_json"]]
+  },
+  {
+    "id": "parse_json",
+    "type": "json",
+    "name": "Parser JSON",
+    "x": 320,
+    "y": 100,
+    "wires": [["calcul_risque"]]
+  },
+  {
+    "id": "calcul_risque",
+    "type": "function",
+    "name": "Calcul score risque",
+    "func": "const d = msg.payload;\n\nconst score_niveau = Math.min(100, (d.niveau_eau / d.seuil_danger) * 60);\nconst score_pluie  = Math.min(40,  (d.pluviometrie / 20) * 40);\nconst risque = Math.round(score_niveau + score_pluie);\n\nd.risque_inondation = risque;\nd.classe_risque = risque >= 80 ? 'CRITIQUE' :\n                  risque >= 60 ? 'ÉLEVÉ'    :\n                  risque >= 40 ? 'MODÉRÉ'   : 'FAIBLE';\n\nmsg.payload = d;\nreturn msg;",
+    "x": 520,
+    "y": 100,
+    "wires": [["switch_alerte", "debug_out"]]
+  },
+  {
+    "id": "switch_alerte",
+    "type": "switch",
+    "name": "Filtrer alertes",
+    "property": "payload.statut",
+    "rules": [
+      { "t": "eq", "v": "DANGER" },
+      { "t": "eq", "v": "ALERTE" },
+      { "t": "eq", "v": "NORMAL" }
+    ],
+    "x": 720,
+    "y": 100,
+    "wires": [["format_alerte_danger"], ["format_alerte_orange"], []]
+  },
+  {
+    "id": "format_alerte_danger",
+    "type": "function",
+    "name": "Formater alerte DANGER",
+    "func": "const d = msg.payload;\nmsg.topic   = 'DANGER INONDATION — ' + d.zone_nom;\nmsg.payload = '🚨 DANGER: ' + d.zone_nom + '\\nNiveau: ' + d.niveau_eau + 'm\\nRivière: ' + d.riviere + '\\nTimestamp: ' + d.timestamp;\nreturn msg;",
+    "x": 960,
+    "y": 60,
+    "wires": [["debug_alerte"]]
+  },
+  {
+    "id": "format_alerte_orange",
+    "type": "function",
+    "name": "Formater alerte ALERTE",
+    "func": "const d = msg.payload;\nmsg.topic   = 'ALERTE INONDATION — ' + d.zone_nom;\nmsg.payload = '⚠️ ALERTE: ' + d.zone_nom + '\\nNiveau: ' + d.niveau_eau + 'm\\nRivière: ' + d.riviere + '\\nTimestamp: ' + d.timestamp;\nreturn msg;",
+    "x": 960,
+    "y": 140,
+    "wires": [["debug_alerte"]]
+  },
+  {
+    "id": "debug_out",
+    "type": "debug",
+    "name": "Debug données",
+    "active": true,
+    "x": 720,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "debug_alerte",
+    "type": "debug",
+    "name": "Debug alertes",
+    "active": true,
+    "x": 1160,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "broker_mada",
+    "type": "mqtt-broker",
+    "name": "Broker Mosquitto GCP",
+    "broker": "34.57.103.138",
+    "port": "1883",
+    "clientid": "nodered_client",
+    "usetls": false,
+    "compatmode": false,
+    "keepalive": "60",
+    "cleansession": true,
+    "credentials": {
+      "user": "nodered_user",
+      "password": "NodeRed2025!"
+    }
+  }
+]
