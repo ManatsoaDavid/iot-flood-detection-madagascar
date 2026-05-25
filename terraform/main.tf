@@ -70,6 +70,7 @@ resource "google_storage_bucket" "iot_data_backup" {
   name          = "${var.project_id}-iot-flood-data"
   location      = var.region
   force_destroy = true
+  uniform_bucket_level_access = true
 
   lifecycle_rule {
     condition { age = 30 }
