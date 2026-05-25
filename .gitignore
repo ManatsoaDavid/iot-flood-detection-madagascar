@@ -1,0 +1,66 @@
+# ══════════════════════════════════════════
+# SECRETS & CREDENTIALS — jamais sur GitHub
+# ══════════════════════════════════════════
+.env
+*.tfvars
+!*.tfvars.example
+
+# Clé de compte de service GCP
+credentials.json
+*-credentials.json
+service-account*.json
+
+# ══════════════════════════════════════════
+# TERRAFORM
+# ══════════════════════════════════════════
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+terraform/*.tfstate*
+terraform/crash.log
+
+# ══════════════════════════════════════════
+# CERTIFICATS TLS — jamais sur GitHub
+# ══════════════════════════════════════════
+*.key
+*.crt
+*.pem
+*.csr
+*.srl
+simulator/certs/
+ansible/certs/
+
+# ══════════════════════════════════════════
+# PYTHON
+# ══════════════════════════════════════════
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+venv/
+.venv/
+dist/
+build/
+
+# ══════════════════════════════════════════
+# ANSIBLE
+# ══════════════════════════════════════════
+ansible/group_vars/all/vault.yml
+*.retry
+
+# ══════════════════════════════════════════
+# SYSTÈME & IDE
+# ══════════════════════════════════════════
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ══════════════════════════════════════════
+# LOGS
+# ══════════════════════════════════════════
+*.log
+logs/
