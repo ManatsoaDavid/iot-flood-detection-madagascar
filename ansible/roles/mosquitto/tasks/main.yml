@@ -14,8 +14,6 @@
       listener 1883
       allow_anonymous false
       password_file /etc/mosquitto/passwd
-      persistence true
-      persistence_location /var/lib/mosquitto/
 
 - name: Créer l'utilisateur MQTT iot_user
   shell: |
