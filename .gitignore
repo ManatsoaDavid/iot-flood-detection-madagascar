@@ -64,3 +64,5 @@ ansible/group_vars/all/vault.yml
 # ══════════════════════════════════════════
 *.log
 logs/
+
+venv/
