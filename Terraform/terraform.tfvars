@@ -1,6 +1,0 @@
-project_id       = "iot-flood-madagascar"
-region           = "us-central1"
-zone             = "us-central1-a"
-machine_type     = "e2-small"
-ssh_user         = "david"
-ssh_pub_key_path = "~/.ssh/id_rsa.pub"
