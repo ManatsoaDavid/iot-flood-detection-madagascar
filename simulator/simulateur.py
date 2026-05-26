@@ -1,17 +1,23 @@
 import paho.mqtt.client as mqtt
-import json, time, random, math
+import json, time, random, math, ssl
 import numpy as np
 import requests
 from datetime import datetime
 from config import ZONES, MQTT_BROKER, MQTT_PORT, MQTT_USER, MQTT_PASSWORD, INTERVALLE, TB_URL
+from prediction_ml import ajouter_mesure, predire_risque_24h
 
-# ── Connexion MQTT ───────────────────────────────────────────
+# ── Connexion MQTT over TLS ──────────────────────────────────
 client = mqtt.Client(client_id="simulateur_mada_v1")
 client.username_pw_set(MQTT_USER, MQTT_PASSWORD)
 
+ssl_context = ssl.create_default_context()
+ssl_context.check_hostname = False
+ssl_context.verify_mode = ssl.CERT_NONE
+client.tls_set_context(ssl_context)
+
 def on_connect(c, userdata, flags, rc):
     if rc == 0:
-        print(f"[MQTT] Connecté au broker {MQTT_BROKER}:{MQTT_PORT}")
+        print(f"[MQTT] Connecté au broker {MQTT_BROKER}:{MQTT_PORT} (TLS)")
     else:
         print(f"[MQTT] Erreur connexion — code {rc}")
 
@@ -32,6 +38,8 @@ def envoyer_thingsboard(mesures, token):
         "risque_inondation" : mesures["risque_inondation"],
         "latitude"          : mesures["latitude"],
         "longitude"         : mesures["longitude"],
+        "niveau_predit_24h" : mesures.get("niveau_predit_24h"),
+        "risque_24h_pct"    : mesures.get("risque_24h_pct"),
     }
     try:
         r = requests.post(url, json=payload, timeout=5)
@@ -96,31 +104,42 @@ def generer_mesures(zone):
     }
 
 # ── Boucle principale ────────────────────────────────────────
-print("=" * 55)
+print("=" * 60)
 print("  IoT Flood Detection — Madagascar")
-print("  Démarrage de la simulation...")
-print("=" * 55)
+print("  Démarrage simulation + ML prédictif")
+print("=" * 60)
 
 while True:
     for zone in ZONES:
         mesures = generer_mesures(zone)
+
+        # Ajouter à l'historique ML
+        ajouter_mesure(zone["id"], mesures)
+
+        # Prédiction ML
+        niveau_predit, risque_24h = predire_risque_24h(zone["id"])
+        mesures["niveau_predit_24h"] = niveau_predit
+        mesures["risque_24h_pct"]    = risque_24h
 
         # Envoi MQTT → Node-RED
         topic   = f"mada/inondation/{zone['id']}/data"
         client.publish(topic, json.dumps(mesures), qos=1)
 
         # Envoi HTTP → ThingsBoard
-        tb_ok = envoyer_thingsboard(mesures, zone["tb_token"])
+        tb_ok     = envoyer_thingsboard(mesures, zone["tb_token"])
         tb_status = "✓" if tb_ok else "✗"
 
+        # Affichage
+        predit_str = f"{niveau_predit:.3f}m" if niveau_predit else "calcul..."
         print(
             f"[{datetime.now().strftime('%H:%M:%S')}] "
             f"{zone['nom']:15} | "
             f"Niveau: {mesures['niveau_eau']:.3f}m | "
             f"Statut: {mesures['statut']:6} | "
             f"Risque: {mesures['risque_inondation']:3}% | "
+            f"Prédit: {predit_str:9} | "
             f"TB:{tb_status}"
         )
 
-    print("-" * 55)
+    print("-" * 60)
     time.sleep(INTERVALLE)

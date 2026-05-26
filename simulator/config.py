@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MQTT_BROKER   = os.getenv("MQTT_BROKER", "34.57.103.138")
-MQTT_PORT     = int(os.getenv("MQTT_PORT", 1883))
+MQTT_PORT = int(os.getenv("MQTT_PORT", 8883))
 MQTT_USER     = os.getenv("MQTT_USER", "iot_user")
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "MadaIoT2025!")
 INTERVALLE    = int(os.getenv("INTERVALLE_SECONDES", 30))
@@ -30,8 +30,8 @@ ZONES = [
         "lat"          : -18.1492,
         "lon"          : 49.4023,
         "riviere"      : "Ivondro",
-        "seuil_alerte" : 2.0,
-        "seuil_danger" : 3.0,
+        "seuil_alerte" : 0.1,
+        "seuil_danger" : 0.2,
         "base_niveau"  : 1.1,
         "base_pluie"   : 5.0,
         "tb_token"     : "2DDjUpvXT23Slctb332U",
@@ -72,4 +72,16 @@ ZONES = [
         "base_pluie"   : 0.8,
         "tb_token"     : "nqO41HvAF6IrYE27jBFa",
     },
+    {
+    "id"           : "zone_antsiranana",
+    "nom"          : "Antsiranana",
+    "lat"          : -12.3529,
+    "lon"          : 49.2957,
+    "riviere"      : "Mahavavy",
+    "seuil_alerte" : 1.5,
+    "seuil_danger" : 2.2,
+    "base_niveau"  : 0.7,
+    "base_pluie"   : 2.5,
+    "tb_token"     : "UmTt8UZYwmQ6Sr9xKZsq",
+},
 ]
